@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Train Ticket</title>
+    <style>
+        body {
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e84e0b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #0ee6b4;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border: solid;
+            font-size: medium;
+        }
+
+        h1 {
+            text-align: center;
+            color: #070202;
+            margin-bottom: 20px;
+        }
+
+        .train-details {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: grid;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .submit-btn {
+            background-color: #007BFF;
+            color: rgb(10, 2, 2);
+            padding: 12px;
+            border: solid ;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .submit-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            color: green;
+            font-size: 16px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .seats-warning {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .ticket-info {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .ticket-info h3 {
+            margin-top: 0;
+        }
+
+        .ticket-details p {
+            margin: 5px 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Book Train Ticket</h1>
+        
+        <div class="train-details" id="train-info">
+            <!-- Train details will be dynamically populated -->
+        </div>
+
+        <form id="booking-form">
+            <div class="form-group">
+                <label for="passenger-name">Passenger Name</label>
+                <input type="text" id="passenger-name" required placeholder="Enter full name">
+            </div>
+
+            <div class="form-group">
+                <label for="contact">Contact Number</label>
+                <input type="tel" id="contact" required pattern="[0-9]{10}" placeholder="10-digit mobile number">
+            </div>
+
+            <!-- Age Input -->
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" required min="1" placeholder="Enter age">
+            </div>
+
+            <!-- Seat Class Select -->
+            <div class="form-group">
+                <label for="seat-class">Seat Class</label>
+                <select id="seat-class" required>
+                    <option value="">Select Seat Class and Fare</option>
+                    <option value="s1">Sleeper Class (S1) -- 500 Rs. </option>
+                    <option value="s2">Sleeper Class (S2) -- 500 Rs.</option>
+                    <option value="b1">Business Class (B1) -- 1250 Rs.</option>
+                    <option value="b2">Business Class (B2) -- 1250 Rs.</option>
+                    <option value="a1">AC Class (A1) -- 1500 Rs.</option>
+                    <option value="a2">AC Class (A2) -- 1500 Rs.</option>
+                </select>
+            </div>
+
+            <!-- Hidden inputs for train and user details -->
+            <input type="hidden" id="user-id" value="1">
+            <input type="hidden" id="train-id" value="">
+
+            <button type="submit" class="submit-btn" id="submit-button">Book Ticket</button>
+        </form>
+
+        <div id="booking-result" class="success-message"></div>
+
+        <!-- Show only Booking ID after successful booking -->
+        <div id="ticket-info-section" class="ticket-info" style="display: none;">
+            <h3>Your Booking ID</h3>
+            <div id="ticket-details" class="ticket-details">
+                <!-- Booking ID will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to parse URL parameters with improved error handling
+        function getUrlParameters() {
+            const params = new URLSearchParams(window.location.search);
+            const parameters = {
+                trainId: params.get('train_id') || '',
+                trainName: params.get('train_name') || 'N/A',
+                departureTime: params.get('departure_time') || 'N/A',
+                arrivalTime: params.get('arrival_time') || 'N/A',
+                departureStation: params.get('departure_station') || 'N/A',
+                arrivalStation: params.get('arrival_station') || 'N/A'
+            };
+
+            // Log parameters for debugging
+            console.log('URL Parameters:', parameters);
+            return parameters;
+        }
+
+        // Populate train details on page load
+        function populateTrainInfo() {
+            const trainInfo = getUrlParameters();
+            const trainInfoElement = document.getElementById('train-info');
+            const trainIdInput = document.getElementById('train-id');
+            
+            // Set train ID in hidden input
+            trainIdInput.value = trainInfo.trainId;
+
+            trainInfoElement.innerHTML = ` 
+                <h3>Train Details</h3>
+                <p><strong>Train Name:</strong> ${trainInfo.trainName}</p>
+                <p><strong>Departure Station:</strong> ${trainInfo.departureStation}</p>
+                <p><strong>Arrival Station:</strong> ${trainInfo.arrivalStation}</p>
+                <p><strong>Departure Time:</strong> ${trainInfo.departureTime}</p>
+                <p><strong>Arrival Time:</strong> ${trainInfo.arrivalTime}</p>
+            `;
+        }
+
+        // Validate form inputs
+        function validateForm() {
+            const passengerName = document.getElementById('passenger-name').value.trim();
+            const contact = document.getElementById('contact').value;
+            const age = document.getElementById('age').value;
+            const seatClass = document.getElementById('seat-class').value;
+            const trainId = document.getElementById('train-id').value;
+
+            if (passengerName === '' || contact === '' || seatClass === '' || age === '') {
+                alert('Please fill in all fields');
+                return false;
+            }
+
+            const contactRegex = /^[0-9]{10}$/;
+            if (!contactRegex.test(contact)) {
+                alert('Please enter a valid 10-digit mobile number');
+                return false;
+            }
+
+            if (!trainId) {
+                alert('Train information is missing. Please go back and select a train.');
+                return false;
+            }
+
+            if (isNaN(age) || age < 1) {
+                alert('Please enter a valid age');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Handle form submission
+        document.getElementById('booking-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Validate form before submission
+    if (!validateForm()) {
+        return;
+    }
+
+    // Collect form data
+    const bookingData = {
+        train_id: document.getElementById('train-id').value,
+        user_id: document.getElementById('user-id').value,
+        passenger_name: document.getElementById('passenger-name').value,
+        contact_info: document.getElementById('contact').value,
+        age: document.getElementById('age').value,
+        seat_class: document.getElementById('seat-class').value
+    };
+
+    try {
+        // Make API call to book ticket
+        const response = await fetch('http://localhost:8081/bookings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bookingData)
+    });
+
+        const result = await response.json();
+        
+        // Log the entire result to check its structure
+        console.log('Booking response:', result);
+
+        if (result.success) {
+            // Show success message
+            document.getElementById('booking-result').innerHTML = 
+                `Ticket Booked Successfully! Booking ID: ${result.booking_id}`;
+
+            // Populate only Booking ID
+            const ticketDetails = document.getElementById('ticket-details');
+            ticketDetails.innerHTML = `<p><strong>Booking ID:</strong> ${result.booking_id || 'N/A'}</p>`;
+
+            // Show the ticket info section (just Booking ID)
+            document.getElementById('ticket-info-section').style.display = 'block';
+
+            // Redirect to the search train page after 10 seconds
+            setTimeout(() => {
+                window.location.href = 'login.html'; // Redirect to searchtrain.html
+            }, 10000); // 10000 milliseconds = 10 seconds
+        } else {
+            // Show error message
+            document.getElementById('booking-result').innerHTML = 
+                `Booking Failed: ${result.message || 'Unknown error occurred'}`;
+        }
+    } catch (error) {
+        console.error('Booking error:', error);
+        document.getElementById('booking-result').innerHTML = 
+            'An error occurred while booking the ticket. Please try again.';
+    }
+});
+
+        // Populate train info when page loads
+        window.onload = populateTrainInfo;
+    </script>
+</body>
+</html>
+

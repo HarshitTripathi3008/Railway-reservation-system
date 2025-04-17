@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+       :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #f4f7f9;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --border-radius: 12px;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-size: 16px;
+            --line-height: 1.6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .nav-btn:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .nav-btn.active {
+            background-color: var(--secondary-color);
+        }
+
+        .nav-btn i {
+            margin-right: 5px;
+        }
+
+        .content-section {
+            display: none;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .content-section:not(.active) {
+            opacity: 0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table th, 
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            transition: background-color 0.3s ease;
+        }
+
+        .data-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .data-table tr:hover td {
+            background-color: #f9f9f9;
+        }
+
+        .loading, 
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 16px;
+        }
+
+        .train-seats-search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .train-seats-search input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .train-seats-search input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .train-seats-search {
+                flex-direction: column;
+            }
+
+            .train-seats-search input {
+                width: 100%;
+            }
+
+            .data-table {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .dashboard {
+                padding: 10px;
+            }
+
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+
+            .train-seats-search input {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="nav-buttons">
+            <button class="nav-btn active" data-section="total-users">
+                <i class="fas fa-ticket-alt"></i>Bookings
+            </button>
+            <button class="nav-btn" data-section="train-seats">
+                <i class="fas fa-train"></i>Train Seat Availability
+            </button>
+            <button class="nav-btn" data-section="bookings-by-train">
+                <i class="fas fa-ticket-alt"></i>Bookings by Train
+            </button>
+            <button class="nav-btn" data-section="user-list">
+                <i class="fas fa-list"></i>User List
+            </button>
+            <button class="nav-btn" data-section="admin-list">
+                <i class="fas fa-user-shield"></i>Admin List
+            </button>
+            <button class="nav-btn" data-section="total-bookings">
+                <i class="fas fa-chart-bar"></i>Total Bookings
+            </button>
+        </div>
+
+        <!-- Total Users Section -->
+        <div id="total-users" class="content-section active">
+            <h2>Total Users</h2>
+            <div id="totalUsersContent" class="loading">Loading total users...</div>
+        </div>
+
+        <!-- Train Seat Availability Section -->
+        <div id="train-seats" class="content-section">
+            <h2>Train Seat Availability</h2>
+            <div class="train-seats-search">
+                <input type="text" id="trainIdInput" placeholder="Enter Train ID">
+                <button id="searchTrainSeatsBtn" class="nav-btn">
+                    <i class="fas fa-search"></i>Search
+                </button>
+            </div>
+            <div id="trainSeatsContent" class="loading">
+                Enter a Train ID to view seat availability
+            </div>
+        </div>
+
+        <!-- Bookings by Train Section -->
+        <div id="bookings-by-train" class="content-section">
+            <h2>Bookings by Train</h2>
+            <div id="bookingsByTrainContent" class="loading">Loading bookings...</div>
+        </div>
+
+        <!-- User List Section -->
+        <div id="user-list" class="content-section">
+            <h2>User List</h2>
+            <div id="userListContent" class="loading">Loading users...</div>
+        </div>
+
+        <!-- Admin List Section -->
+        <div id="admin-list" class="content-section">
+            <h2>Admin List</h2>
+            <div id="adminListContent" class="loading">Loading admins...</div>
+        </div>
+
+        <!-- Total Bookings Section -->
+        <div id="total-bookings" class="content-section">
+            <h2>Total Bookings</h2>
+            <div id="totalBookingsContent" class="loading">Loading total bookings...</div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation Button Click Handler
+        document.querySelectorAll('.nav-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and sections
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+
+                // Add active class to clicked button and corresponding section
+                button.classList.add('active');
+                const sectionId = button.dataset.section;
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // Fetch Data Function
+        const fetchData = async (url, body = {}) => {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return { success: false, message: error.message };
+            }
+        };
+
+        // Total Users
+        fetchData('http://localhost:8081/admin/bookings')
+    .then(data => {
+        const content = document.getElementById('totalUsersContent');
+        if (data.success) {
+            content.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Train ID</th>
+                            <th>Passenger Name</th>
+                            <th>Class</th>
+                            <th>Train Name</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Contact Info</th>
+                            <th>Age</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.bookings.map(booking => `
+                            <tr>
+                                <td>${booking.booking_id}</td>
+                                <td>${booking.train_id}</td>
+                                <td>${booking.passenger_name}</td>
+                                <td>${booking.seat_class}</td>
+                                <td>${booking.train_name || 'N/A'}</td>
+                                <td>${booking.status}</td>
+                                <td>${new Date(booking.created_at).toLocaleString()}</td>
+                                <td>${booking.contact_info}</td>
+                                <td>${booking.age}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            content.innerHTML = `Error: ${data.message}`;
+            content.classList.add('error');
+        }
+    });
+
+        // Train Seat Availability with Train ID Search
+        document.getElementById('searchTrainSeatsBtn').addEventListener('click', async () => {
+            const trainIdInput = document.getElementById('trainIdInput');
+            const trainSeatsContent = document.getElementById('trainSeatsContent');
+            const trainId = trainIdInput.value.trim();
+
+            // Clear previous content and show loading
+            trainSeatsContent.innerHTML = 'Loading seat availability...';
+            trainSeatsContent.className = 'loading';
+
+            if (!trainId) {
+                trainSeatsContent.innerHTML = 'Please enter a Train ID';
+                trainSeatsContent.className = 'error';
+                return;
+            }
+
+            try {
+                // Fetch train details first
+                const trainResponse = await fetch('http://localhost:8081/admin/train-details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ train_id: trainId })
+                });
+
+                const trainData = await trainResponse.json();
+
+                if (!trainData.success) {
+                    throw new Error(trainData.message || 'Train not found');
+                }
+
+                // Fetch seat availability
+                const seatsResponse = await fetch('http://localhost:8081/admin/train-seats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ train_id: trainId })
+                });
+
+                const seatsData = await seatsResponse.json();
+
+                if (!seatsData.success) {
+                    throw new Error(seatsData.message || 'Seat data not available');
+                }
+
+                // Render train and seat information
+                trainSeatsContent.innerHTML = `
+                    <div>
+                        <h3>Train Details</h3>
+                        <table class="data-table">
+                            <tr>
+                                <th>Train ID</th>
+                                <td>${trainData.train.train_id}</td>
+                            </tr>
+                            <tr>
+                                <th>Train Name</th>
+                                <td>${trainData.train.train_name}</td>
+                            </tr>
+                            <tr>
+                                <th>Route</th>
+                                <td>${trainData.train.departure_station} - ${trainData.train.arrival_station}</td>
+                            </tr>
+                        </table>
+
+                        <h3>Seat Availability</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Seat Type</th>
+                                    <th>Available Seats</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(seatsData.availableSeats).map(([type, count]) => `
+                                    <tr>
+                                        <td>${type.toUpperCase()}</td>
+                                        <td>${count}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                trainSeatsContent.className = '';
+
+            } catch (error) {
+                console.error('Error fetching train seat availability:', error);
+                trainSeatsContent.innerHTML = `Error: ${error.message}`;
+                trainSeatsContent.className = 'error';
+            }
+        });
+
+        // Bookings by Train
+        fetchData('http://localhost:8081/admin/bookings-by-train', { user_id: 1 })
+    .then(data => {
+        const content = document.getElementById('bookingsByTrainContent');
+        if (data.success) {
+            content.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Train ID</th>
+                            <th>Train Name</th>
+                            <th>Route</th>
+                            <th>Booked Tickets</th>
+                            <th>Cancelled Tickets</th>
+                            <th>Total Bookings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.bookingsByTrain.map(booking => `
+                            <tr>
+                                <td>${booking.train_id}</td>
+                                <td>${booking.train_name}</td>
+                                <td>${booking.departure_station} - ${booking.arrival_station}</td>
+                                <td>${booking.booked_count}</td>
+                                <td>${booking.cancelled_count}</td>
+                                <td>${booking.total_bookings}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            content.innerHTML = `Error: ${data.message}`;
+            content.classList.add('error');
+        }
+    });
+
+        // User List
+        fetchData('http://localhost:8081/admin/users')
+            .then(data => {
+                const content = document.getElementById('userListContent');
+                if (data.success) {
+                    content.innerHTML = `
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.users.map(user => `
+                                    <tr>
+                                        <td>${user.user_id}</td>
+                                        <td>${user.name}</td>
+                                        <td>${user.email}</td>
+                                        <td>${user.status}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    content.innerHTML = `Error: ${data.message}`;
+                    content.classList.add('error');
+                }
+            });
+
+        // Admin List
+        fetchData('http://localhost:8081/admin/admin-list')
+            .then(data => {
+                const content = document.getElementById('adminListContent');
+                if (data.success) {
+                    content.innerHTML = `
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Admin ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.admins.map(admin => `
+                                    <tr>
+                                        <td>${admin.admin_id}</td>
+                                        <td>${admin.name}</td>
+                                        <td>${admin.email}</td>
+                                        <td>${admin.role}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    content.innerHTML = `Error: ${data.message}`;
+                    content.classList.add('error');
+                }
+            });
+
+        // Total Bookings
+        fetchData('http://localhost:8081/admin/total-bookings', { user_id: 1 })
+            .then(data => {
+                const content = document.getElementById('totalBookingsContent');
+                if (data.success) {
+                    content.innerHTML = `
+                        <table class="data-table">
+                            <tr>
+                                <th>Total Bookings</th>
+                                <td>${data.total_bookings}</td>
+                            </tr>
+                        </table>
+                    `;
+                } else {
+                    content.innerHTML = `Error: ${data.message}`;
+                    content.classList.add('error');
+                }
+            });
+            
+    </script>
+</body>
+</html>

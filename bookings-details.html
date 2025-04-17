@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #bookingForm {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        #bookingId {
+            flex-grow: 1;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #searchButton {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #bookingDetails {
+            display: none;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .detail-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        .detail-value {
+            flex-grow: 1;
+        }
+        #errorMessage {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Booking Details Lookup</h1>
+        <div id="bookingForm">
+            <input type="number" id="bookingId" placeholder="Enter Booking ID" required>
+            <button id="searchButton">Search</button>
+        </div>
+        <div id="errorMessage"></div>
+        <div id="bookingDetails">
+            <div class="detail-row">
+                <div class="detail-label">Booking ID:</div>
+                <div class="detail-value" id="displayBookingId"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Passenger Name:</div>
+                <div class="detail-value" id="passengerName"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Train ID:</div>
+                <div class="detail-value" id="trainId"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Contact Info:</div>
+                <div class="detail-value" id="contactInfo"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Age:</div>
+                <div class="detail-value" id="age"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Seat Class:</div>
+                <div class="detail-value" id="seatClass"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Status:</div>
+                <div class="detail-value" id="bookingStatus"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Created At:</div>
+                <div class="detail-value" id="createdAt"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bookingIdInput = document.getElementById('bookingId');
+            const searchButton = document.getElementById('searchButton');
+            const bookingDetails = document.getElementById('bookingDetails');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Fields to populate
+            const fields = [
+                'displayBookingId', 'passengerName', 'trainId', 
+                'contactInfo', 'age', 'seatClass', 
+                'bookingStatus', 'createdAt'
+            ];
+
+            searchButton.addEventListener('click', async () => {
+    const bookingId = bookingIdInput.value.trim();
+
+    if (!bookingId) {
+        errorMessage.textContent = 'Please enter a booking ID';
+        bookingDetails.style.display = 'none';
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:8081/booking-details', {  // Changed URL
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ booking_id: bookingId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            errorMessage.textContent = '';
+            
+            // Populate booking details
+            document.getElementById('displayBookingId').textContent = data.booking.booking_id;
+            document.getElementById('passengerName').textContent = data.booking.passenger_name;
+            document.getElementById('trainId').textContent = data.booking.train_id;
+            document.getElementById('contactInfo').textContent = data.booking.contact_info;
+            document.getElementById('age').textContent = data.booking.age;
+            document.getElementById('seatClass').textContent = data.booking.seat_class;
+            document.getElementById('bookingStatus').textContent = data.booking.status;
+            document.getElementById('createdAt').textContent = new Date(data.booking.created_at).toLocaleString();
+
+            bookingDetails.style.display = 'block';
+        } else {
+            errorMessage.textContent = data.message || 'Unable to fetch booking details';
+            bookingDetails.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        errorMessage.textContent = 'An error occurred while fetching booking details';
+        bookingDetails.style.display = 'none';
+    }
+});
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-dark: #0056b3;
+            --success-color: #28a745;
+            --success-dark: #218838;
+            --error-color: #dc3545;
+            --background-color: #f4f4f9;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --border-radius: 8px;
+            --font-family: 'Arial', sans-serif;
+            --font-size: 16px;
+            --line-height: 1.6;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            font-size: var(--font-size);
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="email"]:focus, input[type="password"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .error-message, .success-message {
+            text-align: center;
+            font-size: 14px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .success-message {
+            color: var(--success-color);
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .link a:hover {
+            color: var(--primary-dark);
+        }
+
+        .redirect-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .redirect-link button {
+            background-color: var(--success-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .redirect-link button:hover {
+            background-color: var(--success-dark);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            input[type="email"], input[type="password"], button {
+                font-size: 14px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Login</h2>
+        <div class="error-message" id="error-message">Invalid email or password.</div>
+        <div class="success-message" id="success-message">Login successful.</div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Admin Login</button>
+        </form>
+        <div class="link">
+            <p><a href="admin-signup.html"></a></p>
+        </div> 
+
+        <!-- New redirect button to the login page -->
+        <div class="redirect-link">
+            <button onclick="window.location.href='login.html'">User Login</button>
+        </div>
+    </div>
+
+    <script>
+        // Event listener for form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get values from form inputs
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Sending POST request to the backend
+            const response = await fetch('http://localhost:8081/admin/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+
+            // Check the response from the backend
+            if (data.success) {
+                // Show success message
+                document.getElementById('success-message').style.display = 'block';
+                document.getElementById('error-message').style.display = 'none';
+
+                // Redirect to admin dashboard after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'admin-dashboard.html'; // Redirect to admin dashboard
+                }, 2000);
+            } else {
+                // Show error message
+                document.getElementById('error-message').style.display = 'block';
+                document.getElementById('success-message').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+
